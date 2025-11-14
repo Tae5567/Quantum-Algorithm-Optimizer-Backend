@@ -1,0 +1,45 @@
+service: quantum-optimizer-backend
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  
+  environment:
+    AWS_REGION: ${env:AWS_REGION}
+    BEDROCK_MODEL_ID: ${env:BEDROCK_MODEL_ID}
+    BEDROCK_REGION: ${env:BEDROCK_REGION}
+    BRAKET_S3_BUCKET: ${env:BRAKET_S3_BUCKET}
+    BRAKET_REGION: ${env:BRAKET_REGION}
+  
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - bedrock:*
+            - braket:*
+            - s3:*
+          Resource: "*"
+
+functions:
+  api:
+    handler: lambda_handler.handler
+    timeout: 30
+    memorySize: 512
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: ANY
+      - httpApi:
+          path: /
+          method: ANY
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    slim: true
